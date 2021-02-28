@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -27,12 +27,98 @@ class TodoList(db.Model):
         return f'<TodoList {self.id}: {self.name}>'
 
 
+# create all tables
 db.create_all()
+
+# insert some data when starting
 default_list = TodoList(name='default')
 todo = Todo(description='complete sqlalchemy demo')
 default_list.todos.append(todo)
 db.session.add(default_list)
 db.session.commit()
+
+
+@app.route('/lists', methods=['POST'])
+def create_list():
+    body = request.get_json()
+    name = body.get('name', '')
+    if not name:
+        abort(400)
+
+    todolist = TodoList(name=name)
+    try:
+        db.session.add(todolist)
+        db.session.commit()
+    except:
+        abort(500)
+    return jsonify({'success': True, 'id': todolist.id})
+
+
+@app.route('/lists/<int:list_id>', methods=['DELETE'])
+def delete_list(list_id: int):
+    if list_id == 1:
+        abort(403)
+
+    todolist = TodoList.query.get_or_404(list_id)
+
+    try:
+        db.session.delete(todolist)
+        db.session.commit()
+    except:
+        abort(500)
+    return jsonify({'success': True, 'id': list_id})
+
+
+@app.route('/todos', methods=['POST'])
+def create_todo():
+    body = request.get_json()
+    description = body.get('description', '')
+    if not description:
+        abort(400)
+
+    list_id = body.get('list_id', 1)
+    todolist = TodoList.query.get_or_404(list_id)
+    todo = Todo(description=description)
+    todolist.todos.append(todo)
+
+    try:
+        db.session.commit()
+    except:
+        abort(500)
+    return jsonify({'success': True, 'todo_id': todo.id})
+
+
+@app.route('/todos/<int:todo_id>', methods=['PUT'])
+def change_todo_status(todo_id: int):
+    todo = Todo.query.get_or_404(todo_id)
+    todo.completed = not todo.completed
+
+    try:
+        db.session.commit()
+    except:
+        abort(500)
+    return jsonify({'success': True, 'todo_id': todo_id})
+
+
+@app.route('/todos/<int:todo_id>', methods=['DELETE'])
+def delete_todo(todo_id: int):
+    todo = Todo.query.get_or_404(todo_id)
+
+    try:
+        db.session.delete(todo)
+        db.session.commit()
+    except:
+        abort(500)
+    return jsonify({'success': True, 'todo_id': todo_id})
+
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'success': False,
+        'error': 400,
+        'message': 'Bad Request'
+    }), 400
 
 
 @app.errorhandler(403)
