@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -33,6 +33,34 @@ todo = Todo(description='complete sqlalchemy demo')
 default_list.todos.append(todo)
 db.session.add(default_list)
 db.session.commit()
+
+
+@app.errorhandler(403)
+def forbidden(error):
+    return jsonify({
+        'success': False,
+        'error': 403,
+        'message': 'Forbidden'
+    }), 403
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'success': False,
+        'error': 404,
+        'message': 'Not Found'
+    }), 404
+
+
+@app.errorhandler(500)
+def server_error(error):
+    db.session.rollback()
+    return jsonify({
+        'success': False,
+        'error': 500,
+        'message': 'Internal Server Error'
+    }), 500
 
 
 @app.route('/')
