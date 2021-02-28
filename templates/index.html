@@ -3,8 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>SQLite viewer</title>
+  <style>
+    body {
+      display: flex;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    .todos {
+      margin-right: 200px;
+    }
+  </style>
 </head>
 <body>
-  SQLite viewer
+  <table class="todos">
+    <caption>Todos</caption>
+    <tr>
+      <th>id</th>
+      <th>description</th>
+      <th>completed</th>
+      <th>list_id</th>
+    </tr>
+    {% for t in todos %}
+    <tr>
+      <td>{{ t.id }}</td>
+      <td>{{ t.description }}</td>
+      <td>{{ t.completed }}</td>
+      <td>{{ t.list_id }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <table>
+    <caption>Lists</caption>
+    <tr>
+      <th>id</th>
+      <th>name</th>
+    </tr>
+    {% for l in lists %}
+    <tr>
+      <td>{{ l.id }}</td>
+      <td>{{ l.name }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 </body>
 </html>

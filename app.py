@@ -37,7 +37,9 @@ db.session.commit()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    lists = TodoList.query.all()
+    todos = Todo.query.all()
+    return render_template('index.html', lists=lists, todos=todos)
 
 
 if __name__ == '__main__':
